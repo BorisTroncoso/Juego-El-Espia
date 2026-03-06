@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Espía - Modo Carrete</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex items-center justify-center p-4 relative">
+
+  <button onclick="mostrarReglas(true)" class="absolute top-4 right-4 bg-gray-700 hover:bg-gray-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold shadow-lg border border-gray-500 z-10 transition">
+    ?
+  </button>
+
+  <div class="max-w-md w-full bg-gray-800 rounded-xl shadow-lg p-6 text-center relative overflow-hidden">
+    <h1 class="text-3xl font-bold text-red-500 mb-6 drop-shadow-md">🕵️‍♂️ El Espía</h1>
+
+    <div id="pantalla-inicio" class="transition-all duration-300">
+      <input type="text" id="nombre-jugador" placeholder="Tu Nombre/ Apodo/ La wea que sea" 
+             class="w-full p-3 rounded-lg bg-gray-700 border-2 border-transparent focus:border-red-500 focus:outline-none mb-4 text-center text-lg shadow-inner">
+      <button onclick="crearSala()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg mb-4 shadow-lg active:transform active:scale-95 transition-all">Crear Nueva Sala</button>
+      <div class="flex gap-2 relative mt-6 pt-6 border-t border-gray-700">
+        <span class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gray-800 px-2 text-sm text-gray-400">O únete a una</span>
+        <input type="text" id="codigo-sala-input" placeholder="CÓDIGO" maxlength="4" class="w-1/2 p-3 rounded-lg bg-gray-700 border-2 border-transparent focus:border-blue-500 focus:outline-none text-center uppercase text-xl font-bold tracking-wider shadow-inner">
+        <button onclick="unirseSala()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg active:transform active:scale-95 transition-all">Entrar</button>
+      </div>
+    </div>
+
+    <div id="pantalla-lobby" class="hidden transition-all duration-300">
+      <p class="text-sm text-gray-400 uppercase tracking-widest mb-1">Código de la Sala</p>
+      <div id="codigo-mostrar" class="text-5xl font-black tracking-widest text-red-400 mb-6 bg-gray-900 py-3 rounded-lg shadow-inner border border-gray-700"></div>
+      
+      <div class="bg-gray-700 rounded-lg p-4 mb-4 shadow-inner border border-gray-600 text-left">
+        <p class="text-xs text-gray-300 mb-2">¿Quieres agregar lugares para esta ronda?</p>
+        <div class="flex gap-2">
+          <input type="text" id="lugar-custom" placeholder="Ej: La casa del cheche" class="w-2/3 p-2 rounded bg-gray-800 border border-gray-600 text-sm text-white focus:outline-none focus:border-red-500">
+          <button onclick="agregarLugar()" class="w-1/3 bg-gray-600 hover:bg-gray-500 text-white text-sm font-bold rounded">Agregar</button>
+        </div>
+        <p class="text-xs text-green-400 mt-2 text-center" id="contador-lugares">Lugares extra agregados: 0</p>
+      </div>
+
+      <div class="bg-gray-700 rounded-lg p-4 mb-6 shadow-inner border border-gray-600 text-left">
+        <h3 class="text-sm text-gray-400 uppercase mb-3 border-b border-gray-600 pb-2">Jugadores Conectados:</h3>
+        <ul id="lista-jugadores" class="space-y-2 font-medium text-lg"></ul>
+      </div>
+      <button id="btn-empezar" onclick="empezarJuego()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-4 rounded-lg shadow-lg active:transform active:scale-95 transition-all hidden text-xl animate-pulse">¡Comenzar Partida!</button>
+      
+      <button onclick="salirDelJuego()" class="w-full mt-4 bg-gray-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all text-sm">🚪 Salir de la sala</button>
+    </div>
+
+    <div id="pantalla-juego" class="hidden transition-all duration-300">
+      
+      <div class="bg-gray-900 border border-gray-600 rounded-lg py-3 mb-4 flex justify-center items-center shadow-inner">
+        <span class="text-3xl font-mono text-yellow-400 tracking-widest" id="reloj">05:00</span>
+      </div>
+
+      <div id="tarjeta-rol" class="bg-gray-700 rounded-xl p-6 mb-4 shadow-2xl border border-gray-600 relative overflow-hidden">
+        <h2 class="text-sm text-gray-400 uppercase tracking-widest mb-2">Tu Ubicación:</h2>
+        <div id="lugar-secreto" class="text-3xl font-black text-white mb-4 drop-shadow-md"></div>
+        <div id="alerta-espia" class="hidden bg-red-600/20 border-2 border-red-500 rounded-lg p-3 mt-4">
+          <p class="text-red-400 font-bold animate-pulse">¡ERES EL ESPÍA!</p>
+          <p class="text-xs text-red-200 mt-1">Trata de adivinar el lugar.</p>
+        </div>
+        <div id="info-normal" class="hidden mt-4">
+          <p class="text-green-400 font-bold">Eres un jugador normal.</p>
+          <p class="text-xs text-gray-300 mt-1">Busca al espía.</p>
+        </div>
+      </div>
+
+      <div class="bg-gray-800 rounded-lg p-4 shadow-inner border border-gray-700 text-left mb-4">
+        <h3 class="text-xs text-gray-500 uppercase mb-2">Lugares en juego (20 max):</h3>
+        <div id="lista-lugares" class="flex flex-wrap gap-2 text-sm text-gray-300"></div>
+      </div>
+
+      <button onclick="terminarPartida()" class="w-full bg-red-800 hover:bg-red-700 text-white border border-red-500 font-bold py-2 rounded-lg shadow-lg transition-all text-sm mb-2">
+        🛑 Terminar Partida / Revelar Espía
+      </button>
+    </div>
+
+  </div>
+
+  <div id="modal-resultados" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 rounded-xl max-w-sm w-full p-6 relative border-2 border-red-500 text-center shadow-2xl">
+      <h2 class="text-2xl font-bold text-white mb-2" id="motivo-fin">¡Partida Terminada!</h2>
+      <p class="text-gray-400 mb-6">La verdad sale a la luz...</p>
+      
+      <div class="bg-gray-900 rounded p-4 mb-4 border border-gray-600">
+        <p class="text-sm text-gray-500 uppercase">El Espía era:</p>
+        <p class="text-3xl font-bold text-red-500 mb-4" id="nombre-espia"></p>
+        <p class="text-sm text-gray-500 uppercase">Y el lugar era:</p>
+        <p class="text-2xl font-bold text-blue-400" id="lugar-real"></p>
+      </div>
+
+      <div class="space-y-3 mt-4">
+        <button onclick="volverAlLobby()" id="btn-volver" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg hidden shadow-md">
+          🔄 Jugar Otra Ronda
+        </button>
+        <p id="msg-esperando" class="text-sm text-gray-400 hidden">Esperando al creador para seguir...</p>
+        
+        <button onclick="salirDelJuego()" class="w-full bg-gray-700 hover:bg-red-800 text-white border border-gray-600 font-bold py-3 rounded-lg shadow-md transition-colors">
+          🚪 Salir del Juego
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-reglas" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 rounded-xl max-w-sm w-full p-6 relative border border-gray-600">
+      <button onclick="mostrarReglas(false)" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-bold text-red-500 mb-4 border-b border-gray-600 pb-2">📜 Cómo jugar</h2>
+      <ul class="text-sm text-gray-300 space-y-3 text-left list-disc pl-5">
+        <li>A todos les saldrá el mismo lugar en pantalla, <b>excepto al Espía</b>.</li>
+        <li>Tienes 5 minutos. Hazle una pregunta a otro jugador sobre el lugar.</li>
+        <li>El otro responde y le hace una pregunta a alguien más.</li>
+        <li><b>Si eres Normal:</b> Intenta dar respuestas sutiles para que el Espía no adivine dónde están.</li>
+        <li><b>Si eres el Espía:</b> Inventa respuestas. Ganas si el tiempo se acaba sin que te descubran, o si revelas quién eres y adivinas el lugar secreto de la lista.</li>
+      </ul>
+      <button onclick="mostrarReglas(false)" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded">¡Entendido!</button>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+
+    const pantallas = {
+      inicio: document.getElementById('pantalla-inicio'),
+      lobby: document.getElementById('pantalla-lobby'),
+      juego: document.getElementById('pantalla-juego')
+    };
+
+    let miNombre = '';
+    let miCodigoSala = '';
+    let soyCreador = false;
+
+    function cambiarPantalla(pantallaMostrar) {
+      Object.values(pantallas).forEach(p => p.classList.add('hidden'));
+      pantallaMostrar.classList.remove('hidden');
+    }
+
+    function mostrarReglas(mostrar) {
+      document.getElementById('modal-reglas').classList.toggle('hidden', !mostrar);
+    }
+
+    // NUEVA FUNCIÓN: Salir del juego
+    function salirDelJuego() {
+      // Recargar la página limpia todo y desconecta al usuario del servidor
+      location.reload(); 
+    }
+
+    // --- ACCIONES DE INICIO ---
+    function crearSala() {
+      miNombre = document.getElementById('nombre-jugador').value.trim();
+      if (!miNombre) return alert('¡Ponte un nombre para el carrete!');
+      soyCreador = true;
+      socket.emit('crearSala', miNombre);
+    }
+
+    function unirseSala() {
+      miNombre = document.getElementById('nombre-jugador').value.trim();
+      miCodigoSala = document.getElementById('codigo-sala-input').value.trim().toUpperCase();
+      if (!miNombre) return alert('¡Ponte un nombre!');
+      if (miCodigoSala.length !== 4) return alert('El código es de 4 letras compadre.');
+      socket.emit('unirseSala', { codigoSala: miCodigoSala, nombreJugador: miNombre });
+    }
+
+    // --- LOBBY Y LUGARES CUSTOM ---
+    function agregarLugar() {
+      const inputLugar = document.getElementById('lugar-custom');
+      const lugar = inputLugar.value.trim();
+      if(lugar) {
+        socket.emit('agregarLugar', { codigoSala: miCodigoSala, lugar: lugar });
+        inputLugar.value = ''; 
+      }
+    }
+
+    socket.on('lugarAgregado', (cantidad) => {
+      document.getElementById('contador-lugares').innerText = `Lugares extra agregados: ${cantidad}`;
+    });
+
+    function empezarJuego() {
+      socket.emit('empezarJuego', miCodigoSala);
+    }
+
+    // --- CONEXIONES ---
+    socket.on('salaCreada', (codigo) => {
+      miCodigoSala = codigo;
+      cambiarPantalla(pantallas.lobby);
+      document.getElementById('codigo-mostrar').innerText = codigo;
+      document.getElementById('btn-empezar').classList.remove('hidden');
+    });
+
+    socket.on('actualizarJugadores', (jugadores) => {
+      cambiarPantalla(pantallas.lobby);
+      if(!document.getElementById('codigo-mostrar').innerText) {
+        document.getElementById('codigo-mostrar').innerText = miCodigoSala;
+      }
+      const lista = document.getElementById('lista-jugadores');
+      lista.innerHTML = '';
+      jugadores.forEach(j => lista.innerHTML += `<li class="flex items-center gap-2"><span class="text-xl">👤</span> ${j.nombre}</li>`);
+    });
+
+    socket.on('errorSala', (mensaje) => {
+      alert(mensaje);
+      document.getElementById('codigo-sala-input').value = '';
+    });
+
+    // --- EL JUEGO ---
+    socket.on('rolAsignado', (datosSecretos) => {
+      document.getElementById('modal-resultados').classList.add('hidden');
+      cambiarPantalla(pantallas.juego);
+      
+      document.getElementById('alerta-espia').classList.add('hidden');
+      document.getElementById('info-normal').classList.add('hidden');
+      
+      if (datosSecretos.rol === 'Espía') {
+        document.getElementById('lugar-secreto').innerText = "???";
+        document.getElementById('lugar-secreto').classList.add('text-red-500');
+        document.getElementById('alerta-espia').classList.remove('hidden');
+      } else {
+        document.getElementById('lugar-secreto').innerText = datosSecretos.lugar;
+        document.getElementById('lugar-secreto').classList.remove('text-red-500');
+        document.getElementById('info-normal').classList.remove('hidden');
+      }
+    });
+
+    socket.on('juegoIniciado', (todosLosLugares) => {
+      const listaUI = document.getElementById('lista-lugares');
+      listaUI.innerHTML = '';
+      todosLosLugares.forEach(lugar => {
+        listaUI.innerHTML += `<span class="bg-gray-700 px-2 py-1 rounded border border-gray-600">${lugar}</span>`;
+      });
+    });
+
+    // --- CRONÓMETRO ---
+    socket.on('tiempoRestante', (segundos) => {
+      const minutos = Math.floor(segundos / 60);
+      const segs = segundos % 60;
+      document.getElementById('reloj').innerText = 
+        `${minutos.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
+        
+      if(segundos <= 60) {
+        document.getElementById('reloj').classList.add('text-red-500');
+        document.getElementById('reloj').classList.remove('text-yellow-400');
+      } else {
+        document.getElementById('reloj').classList.remove('text-red-500');
+        document.getElementById('reloj').classList.add('text-yellow-400');
+      }
+    });
+
+    // --- FIN DEL JUEGO ---
+    function terminarPartida() {
+      if(confirm('¿Seguro que quieres detener la partida y revelar todo?')) {
+        socket.emit('terminarPartida', miCodigoSala);
+      }
+    }
+
+    socket.on('finDeJuego', (datos) => {
+      document.getElementById('modal-resultados').classList.remove('hidden');
+      document.getElementById('motivo-fin').innerText = datos.motivo;
+      document.getElementById('nombre-espia').innerText = datos.espia;
+      document.getElementById('lugar-real').innerText = datos.lugar;
+
+      if(soyCreador) {
+        document.getElementById('btn-volver').classList.remove('hidden');
+        document.getElementById('msg-esperando').classList.add('hidden');
+      } else {
+        document.getElementById('msg-esperando').classList.remove('hidden');
+      }
+    });
+
+    function volverAlLobby() {
+      socket.emit('volverLobby', miCodigoSala);
+    }
+
+    socket.on('regresarLobby', () => {
+      document.getElementById('modal-resultados').classList.add('hidden');
+      cambiarPantalla(pantallas.lobby);
+    });
+
+  </script>
+</body>
+</html>
