@@ -130,16 +130,16 @@ io.on('connection', (socket) => {
   socket.on('volverLobby', (codigoSala) => {
     if(salas[codigoSala]) salas[codigoSala].estado = 'lobby';
     io.to(codigoSala).emit('regresarLobby');
+    });
+
+  }); // <--- ESTA LLAVE CIERRA EL io.on('connection'). ¡MUY IMPORTANTE!
+
+  // RUTEO PARA RENDER (Afuera de la conexión y usando '/' para que Express 5 no explote)
+  app.get('/', (req, res) => {
+     res.sendFile(__dirname + '/index.html');
   });
 
-  // RUTEO OBLIGATORIO PARA RENDER
-  app.get('*', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor listo en puerto ${PORT}`);
   });
-
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Servidor listo en puerto ${PORT}`);
-});
