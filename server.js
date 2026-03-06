@@ -6,6 +6,9 @@ const app = express();
 
 // 🌟 MAGIA PARA EL HOSTING: Esto hace que el servidor entregue tu index.html automáticamente
 app.use(express.static(__dirname)); 
+app.get('*', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
