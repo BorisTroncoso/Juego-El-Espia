@@ -80,7 +80,7 @@ io.on('connection', (socket) => {
 
       io.to(codigoSala).emit('juegoIniciado', sala.lugaresJugando);
 
-      let tiempo = 300; 
+      let tiempo = 420; 
       sala.timer = setInterval(() => {
         tiempo--;
         io.to(codigoSala).emit('tiempoRestante', tiempo);
@@ -93,7 +93,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 🆘 NUEVO: El rescate para los que se van a WhatsApp
+  //  para que se actualice solo cuando alguien cambie de pestaña
   socket.on('mePerdi', ({ codigoSala, nombreJugador }) => {
     const sala = salas[codigoSala];
     if (sala) {
@@ -132,9 +132,9 @@ io.on('connection', (socket) => {
     io.to(codigoSala).emit('regresarLobby');
     });
 
-  }); // <--- ESTA LLAVE CIERRA EL io.on('connection'). ¡MUY IMPORTANTE!
+  }); 
 
-  // RUTEO PARA RENDER (Afuera de la conexión y usando '/' para que Express 5 no explote)
+  // RUTEO PARA RENDER 
   app.get('/', (req, res) => {
      res.sendFile(__dirname + '/index.html');
   });
