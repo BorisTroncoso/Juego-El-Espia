@@ -104,11 +104,38 @@
       </div>
     </div>
   </div>
+  <div id="modal-reglas" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 rounded-xl max-w-sm w-full p-6 relative border border-gray-600 max-h-[90vh] overflow-y-auto shadow-2xl">
+      <button onclick="mostrarReglas(false)" class="absolute top-3 right-3 text-gray-400 hover:text-white text-3xl font-bold leading-none">&times;</button>
+      <h2 class="text-2xl font-bold text-red-500 mb-4 border-b border-gray-600 pb-2">📜 Las Santisimas Reglas</h2>
+      
+      <div class="text-sm text-gray-300 space-y-4 text-left">
+        <p>🎯 <b>El Objetivo:</b> Descubrir quién es el Espía antes de que pasen los 7 minutos.</p>
+        
+        <p>📍 <b>Si eres NORMAL:</b> A todos les saldrá el mismo lugar. Haz preguntas sutiles a otros para ver si de verdad están ahí (Ej: <i>"¿Hace mucho frío acá?"</i>). Si eres muy obvio al preguntar, el Espía adivinará dónde están.</p>
+        
+        <p>🕵️‍♂️ <b>Si eres el ESPÍA:</b> ¡Estás perdido! Pon cara de póker, escucha atentamente las pistas, y chamulla (inventa) tus respuestas para pasar piola.</p>
+        
+        <p>🗣️ <b>La dinámica:</b> El creador de la sala parte haciéndole una pregunta a otro jugador. El que responde, ahora le hace una pregunta a un TERCERO distinto, y así se pasan la pelota.</p>
+        
+        <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 mt-2 shadow-inner">
+          <p class="font-bold text-gray-400 mb-2 uppercase text-xs tracking-wider">🏆 ¿Quién gana?</p>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li><span class="text-green-400 font-bold">Normales:</span> Si logran ponerse de acuerdo y acusan al Espía correcto.</li>
+            <li><span class="text-red-400 font-bold">El Espía:</span> Si se acaba el tiempo sin que lo pillen, o si frena el juego y adivina el lugar secreto.</li>
+          </ul>
+        </div>
+      </div>
 
+      <button onclick="mostrarReglas(false)" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition-all text-lg">
+        ¡Entendido, a jugar!
+      </button>
+    </div>
+  </div>
   <div id="modal-reglas" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 rounded-xl max-w-sm w-full p-6 relative border border-gray-600">
       <button onclick="mostrarReglas(false)" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
-      <h2 class="text-2xl font-bold text-red-500 mb-4 border-b border-gray-600 pb-2">📜 Cómo jugar</h2>
+      <h2 class="text-2xl font-bold text-red-500 mb-4 border-b border-gray-600 pb-2">📜 Las santas reglas... </h2>
       <ul class="text-sm text-gray-300 space-y-3 text-left list-disc pl-5">
         <li>A todos les saldrá el mismo lugar en pantalla, <b>excepto al Espía</b>.</li>
         <li>Tienes 7 minutos. Hazle una pregunta a otro jugador sobre el lugar.</li>
