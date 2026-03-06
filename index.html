@@ -132,7 +132,18 @@
     let miNombre = '';
     let miCodigoSala = '';
     let soyCreador = false;
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && miCodigoSala && miNombre) {
+        socket.emit('mePerdi', { codigoSala: miCodigoSala, nombreJugador: miNombre });
+      }
+    });
 
+    // Por si Socket.io se desconectó por completo y se reconecta solo
+    socket.on('connect', () => {
+      if (miCodigoSala && miNombre) {
+        socket.emit('mePerdi', { codigoSala: miCodigoSala, nombreJugador: miNombre });
+      }
+    });
     function cambiarPantalla(pantallaMostrar) {
       Object.values(pantallas).forEach(p => p.classList.add('hidden'));
       pantallaMostrar.classList.remove('hidden');
